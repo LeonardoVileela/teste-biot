@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>Teste</title>
+    <style>
+        p {
+            text-align: center;
+            font-size: 60px;
+            margin-top: 0px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div id="principal" class="row">
+            <p id="demo">Testes Automatizados</p>
+            <div style="text-align: center; margin-bottom: 10px;">
+                <button id="testeBtn" onclick="timerStart()" type="button" class="btn btn-primary">Testar</button>
+            </div>
+
+            <div id="errorAlert"></div>
+            <div id="successAlert"></div>
+        </div>
+    </div>
+    <script>
+        function geraStringAleatoria(tamanho) {
+            var stringAleatoria = '';
+            var caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            for (var i = 0; i < tamanho; i++) {
+                stringAleatoria += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+            }
+            return stringAleatoria;
+        }
+    </script>
+
+
+
+    <script>
+
+        var go;
+        var token = '';
+        var arrayError = []
+        var arrayData = []
+
+        function timerStart() {
+            $('#errorAlert').remove()
+            $('#successAlert').remove()
+            token = '';
+            arrayError = []
+            arrayData = []
+            database()
+            startTest()
+            document.getElementById("testeBtn").disabled = true;
+            var t = new Date();
+            var countDownDate = t.setSeconds(t.getSeconds() + 7)
+
+            // Update the count down every 1 second
+            var x = setInterval(function () {
+
+                var now = new Date().getTime();
+
+                var distance = countDownDate - now;
+
+                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById("demo").innerHTML = minutes + "m " + seconds + "s ";
+
+                if (distance < 0) {
+                    document.getElementById("testeBtn").disabled = false;
+                    clearInterval(x);
+                    document.getElementById("demo").innerHTML = "";
+
+                    $("#principal").append('<div id="errorAlert"></div>')
+                    $("#principal").append('<div id="successAlert"></div>')
+                    if (go) {
+                        $("#successAlert").append('<div class="alert alert-success" role="alert">\n' +
+                            '  Todos os testes passaram!\n' +
+                            '</div>')
+                    } else {
+                        arrayError.forEach(element => {
+                            $("#successAlert").append('<div class="alert alert-danger" role="alert">\n' +
+                                'url: ' + element.url + '</br>' +
+                                'status: ' + element.error + '' +
+                                '</div>')
+                        });
+
+                    }
+                }
+            }, 1000);
+        }
+
+
+
+
+
+
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Faker/3.1.0/faker.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+
+        function startTest() {
+            var form = new FormData();
+            form.append("username", "admin@admin.com");
+            form.append("password", "123");
+
+            var settings = {
+                "url": "http://localhost/biottech-back/api/users/login.json",
+                "method": "POST",
+                "timeout": 0,
+                "processData": false,
+                "mimeType": "multipart/form-data",
+                "contentType": false,
+                "data": form
+            };
+
+            $.ajax(settings).done(function (response) {
+                token = JSON.parse(response).token
+                teste()
+            });
+        }
+    </script>
+    <script src="teste.js"></script>
+    <script>
+        function database() {
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/users/save.json',
+                body: {
+                    name: faker.name.findName(),
+                    username: faker.internet.email(),
+                    password: "123",
+                    type: 0
+                }
+            });
+
+
+            arrayData.push({
+                type: 'get',
+                url: 'http://localhost/biottech-back/api/users/getUser.json?id=1'
+            });
+
+
+            arrayData.push({
+                type: 'get',
+                url: 'http://localhost/biottech-back/api/users/getAllUsers.json?active=true'
+            });
+
+
+            arrayData.push({
+                type: 'put',
+                url: 'http://localhost/biottech-back/api/users/update.json?id=2',
+                body: {
+                    name: "JOANA",
+                    type: 1
+                }
+            });
+
+
+            arrayData.push({
+                type: 'put',
+                url: 'http://localhost/biottech-back/api/users/activeAndDisable.json?id=2&active=false',
+                body: {}
+            });
+
+            arrayData.push({
+                type: 'put',
+                url: 'http://localhost/biottech-back/api/users/updatePassword.json',
+                body: {
+                    password: "123"
+                }
+            });
+
+
+            arrayData.push({
+                type: 'get',
+                url: 'http://localhost/biottech-back/api/users/newPassword.json?id=2'
+            });
+
+
+            arrayData.push({
+                type: 'put',
+                url: 'http://localhost/biottech-back/api/users/updateAvatar.json?id=1',
+                body: {
+                    avatar: "avatar2"
+                }
+            });
+
+            arrayData.push({
+                type: 'get',
+                url: 'http://localhost/biottech-back/api/pedido/getAllPedidos.json'
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addNivelProjeto.json',
+                body: {
+                    nome_nivel_projeto: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addLinhaPesquisa.json',
+                body: {
+                    nome_linha_pesquisa: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addFinalidade.json',
+                body: {
+                    nome_finalidade: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addLaboratorio.json',
+                body: {
+                    nome_laboratorio: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addVinculoInstitucional.json',
+                body: {
+                    nome_vinculo_institucional: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addProjeto.json',
+                body: {
+                    nome_projeto: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addEspecie.json',
+                body: {
+                    nome_especie: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/linhagem/addLinhagem.json',
+                body: {
+                    nome_linhagem: geraStringAleatoria(8)
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pesquisador/addPesquisador.json',
+                body: {
+                    nome: faker.name.findName(),
+                    instituicao: faker.random.word(),
+                    setor: faker.random.word(),
+                    pos: faker.random.word(),
+                    ramal: faker.random.word(),
+                    email: faker.internet.email(),
+                    orientador: true,
+                    telefones: [
+                        faker.phone.phoneNumber(),
+                        faker.phone.phoneNumber()
+
+                    ]
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/pedido/addPedido.json',
+                body: {
+                    vinculo_institucional_id: 1,
+                    projeto_id: 1,
+                    especie_id: 1,
+                    linha_pesquisa_id: 1,
+                    nivel_projeto_id: 1,
+                    laboratorio_id: 1,
+                    finalidade_id: 1,
+                    pesquisador_id: 1,
+                    linhagem_id: 1,
+                    processo_sei: "45354.453453/453-453",
+                    equipe_executora: faker.name.findName(),
+                    data_solicitacao: "2022-04-28",
+                    titulo: faker.random.word(),
+                    especificar: faker.random.word(),
+                    exper: "não",
+                    num_ceua: "769/2016",
+                    vigencia_ceua: "2022-03-25",
+                    num_aprovado: 30,
+                    num_solicitado: faker.random.number({ max: 30 }),
+                    adendo_1: faker.random.number({ max: 20 }),
+                    adendo_2: faker.random.number({ max: 20 }),
+                    sexo: "macho",
+                    idade: faker.random.number({ max: 5 }),
+                    peso: faker.random.number({ max: 20 }),
+                    observacoes: faker.random.word()
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/sala/addSala.json',
+                body: {
+                    linhagens: [
+                        1
+                    ],
+                    num_sala: faker.random.number({ max: 1000 })
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/previsao/addPrevisao.json',
+                body: {
+                    pedido_id: 1,
+                    num_previsao: faker.random.number({ max: 1000 }),
+                    retirada_num: "10",
+                    qtd_retirar: faker.random.number({ max: 20 }),
+                    retirada_data: "2022-03-25",
+                    status: faker.random.word()
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/sala/addTemperaturaUmidade.json',
+                body: {
+                    sala_id: 1,
+                    data: "2022-03-25",
+                    temp_matutino: 10,
+                    ur_matutino: "10%",
+                    temp_vespertino: 10,
+                    ur_vespertino: "20%",
+                    observacoes: "sadgsdgsd"
+                }
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/caixa/addCaixa.json',
+                body: {
+                    linhagem_id: 1,
+                    caixa_numero: faker.random.word(),
+                    nascimento: "2022-03-25",
+                    sexo: "macho",
+                    num_animais: 10
+                }
+
+            });
+
+            arrayData.push({
+                type: 'post',
+                url: 'http://localhost/biottech-back/api/saida/addSaida.json',
+                body: {
+                    caixa_id: 1,
+                    data_saida: "2022-03-25",
+                    tipo_saida: "acasalamento",
+                    usuario: faker.name.findName(),
+                    num_animais: faker.random.number({ max: 30 }),
+                    saida: "ultima",
+                    sexo: "femea",
+                    sobra: faker.random.number({ max: 29 }),
+                    observacoes: "asfanfljasnlfjnsf"
+                }
+            });
+
+
+        }
+    </script>
+
+    <script>
+
+        function teste() {
+            arrayData.forEach(element => {
+                if (element.type == 'get') {
+                    getRequest(element.url);
+                } else if (element.type == 'post') {
+                    postRequest(element.url, element.body);
+                } else if (element.type == 'put') {
+                    putRequest(element.url, element.body);
+                } else if (element.type == 'delete') {
+                    deleteRequest(element.url)
+                }
+            });
+
+
+            setTimeout(function () {
+
+
+                if (arrayError.length === 0) {
+                    go = true;
+                } else {
+                    go = false
+                }
+
+
+            }, 5000);
+        }
+
+
+
+    </script>
+</body>
+
+</html>
